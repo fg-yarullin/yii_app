@@ -12,24 +12,23 @@ class RegisterForm extends Model
     public $email;
     public $password;
     public $password_confirm;
-    private $activation_key;
-
-    private $_user = false;
-
+//    private $activation_key;
 
     /**
      * @return array the validation rules.
      */
     public function rules():array
     {
+        $message = 'Адрес электронной почты уже зарегистрирован';
         return [
             // username and password are both required
             [
-                ['surname', 'name', 'password', 'password_confirm'],
+                ['surname', 'name', 'password', 'email', 'password_confirm'],
                 'required'
             ],
             // password is validated by validatePassword()
             ['password', 'validatePassword'],
+            ['email', 'unique', 'message' => $message]
         ];
     }
 
@@ -55,19 +54,25 @@ class RegisterForm extends Model
     /**
      * Logs in a user using the provided username and password.
      * @return bool whether the user is logged in successfully
+     * @throws \yii\base\Exception
      */
     public function register():bool
     {
-        if ($this->validate()) {
+        if ($this->load(Yii::$app->request->post()) /*&& validate user data*/ ) {
 //            return Yii::$app->user->login($this->getUser(), $this->rememberMe ? 3600 * 24 * 30 : 0);
-//            create new user
             $user = new User();
+//            echo '<pre>'; print_r($user); die;
             $user->surname = $this->surname;
             $user->name = $this->name;
             $user->email = $this->email;
-            $user->authKey = password_hash($this->password, PASSWORD_DEFAULT);
+            $user->password = Yii::$app->security->generatePasswordHash($this->password);
+            $user->auth_key = '';
+            $user->activation_key = Yii::$app->security->generateRandomString(64);
+
+            if($user->save()){
+                return 0; // send email
+            }
         }
-        var_dump($user);
         return false;
     }
 
@@ -85,7 +90,7 @@ class RegisterForm extends Model
         if (empty($userData['email'])) {
             $valid = false;
             $errors[] = 'Email cannot be blank';
-        } elseif (filter_var($userData['email'], FILTER_VALIDATE_EMAIL) == false) {
+        } elseif (!filter_var($userData['email'], FILTER_VALIDATE_EMAIL)) {
             $valid = false;
             $errors[] = 'Invalid email address';
         } else {

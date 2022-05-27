@@ -1,15 +1,15 @@
 <?php
 
 namespace app\models;
+use yii\web\IdentityInterface;
+use yii\db\ActiveRecord;
 
-class User extends \yii\base\BaseObject implements \yii\web\IdentityInterface
+class User extends ActiveRecord implements IdentityInterface
 {
-    public $id;
-    public $surname;
-    public $name;
-    public $email;
-    public $authKey;
-    public $accessToken;
+    public static function tableName()
+    {
+        return '{{%user}}';;
+    }
 
     private static $users = [
         '100' => [
@@ -34,7 +34,8 @@ class User extends \yii\base\BaseObject implements \yii\web\IdentityInterface
      */
     public static function findIdentity($id)
     {
-        return isset(self::$users[$id]) ? new static(self::$users[$id]) : null;
+//        return isset(self::$users[$id]) ? new static(self::$users[$id]) : null;
+        return static::findOne(['id' => $id]);
     }
 
     /**
@@ -54,18 +55,12 @@ class User extends \yii\base\BaseObject implements \yii\web\IdentityInterface
     /**
      * Finds user by username
      *
-     * @param string $username
+     * @param string $email
      * @return static|null
      */
-    public static function findByUsername($username)
+    public static function findByUsername(string $email): User
     {
-        foreach (self::$users as $user) {
-            if (strcasecmp($user['username'], $username) === 0) {
-                return new static($user);
-            }
-        }
-
-        return null;
+        return static::findOne(['email' => $email, 'is_active' => true]);
     }
 
     /**

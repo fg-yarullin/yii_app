@@ -29,24 +29,24 @@ $this->params['breadcrumbs'][] = $this->title;
             ]); ?>
 
             <?= $form->field($model, 'surname')
-                ->textInput(['autofocus' => true, 'placeholder' => 'Фамилия'])
+                ->textInput(['autofocus' => true])
                 ->label('Фамилия')?>
 
             <?= $form->field($model, 'name')
-                ->textInput(['autofocus' => true, 'placeholder' => 'Имя'])
+                ->textInput(['autofocus' => true])
                 ->label('Имя')?>
 
             <?= $form->field($model, 'email')
-                ->textInput(['autofocus' => true, 'placeholder' => 'Email адрес'])
+                ->input('email', ['autofocus' => true])
                 ->label('Email адрес')?>
 
             <?= $form->field($model, 'password')
-                ->passwordInput(['placeholder' => 'Пароль'])
+                ->passwordInput()
                 ->label('Пароль')?>
 
             <?= $form->field($model, 'password_confirm')
-                ->passwordInput(['placeholder' => 'Подтверждение пароля'])
-                ->label('Подтверждение пароля ')?>
+                ->passwordInput()
+                ->label('Повторите пароль ')?>
 
             <div class="form-group">
                 <div class="text-center">
