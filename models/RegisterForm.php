@@ -4,9 +4,12 @@ namespace app\models;
 
 use Yii;
 use yii\base\Model;
+use yii\helpers\Url;
+use app\controllers\SiteController;
 
 class RegisterForm extends Model
 {
+    public $username;
     public $surname;
     public $name;
     public $email;
@@ -23,7 +26,10 @@ class RegisterForm extends Model
         return [
             // username and password are both required
             [
-                ['surname', 'name', 'password', 'email', 'password_confirm'],
+                [
+                    'surname', 'name', 'password',
+                    'email', 'password_confirm'
+                ],
                 'required'
             ],
             // password is validated by validatePassword()
@@ -59,18 +65,21 @@ class RegisterForm extends Model
     public function register():bool
     {
         if ($this->load(Yii::$app->request->post()) /*&& validate user data*/ ) {
-//            return Yii::$app->user->login($this->getUser(), $this->rememberMe ? 3600 * 24 * 30 : 0);
             $user = new User();
-//            echo '<pre>'; print_r($user); die;
+            $user->username = $this->email;
             $user->surname = $this->surname;
             $user->name = $this->name;
             $user->email = $this->email;
             $user->password = Yii::$app->security->generatePasswordHash($this->password);
             $user->auth_key = '';
-            $user->activation_key = Yii::$app->security->generateRandomString(64);
+            $user->activation_key = sha1(mt_rand(10000, 99999).time().$this->email);
+
+//            $this->sendActivationKey($user);
+//            echo '<pre>'; print_r('hello')); die;
 
             if($user->save()){
-                return 0; // send email
+                $this->sendActivationKey($user);
+                return true;
             }
         }
         return false;
@@ -79,42 +88,68 @@ class RegisterForm extends Model
     private function validateUserData($userData) {
         $valid = true;
         $errors = [];
+        if (empty($userData['username'])) {
+            $valid = false;
+            $errors[] = 'Логи не может быть пустым';
+        }
         if (empty($userData['surname'])) {
             $valid = false;
-            $errors[] = 'Name cannot be blank';
+            $errors[] = 'Фамилия не может быть пустым';
         }
         if (empty($userData['name'])) {
             $valid = false;
-            $errors[] = 'Name cannot be blank';
+            $errors[] = 'Name не может быть пустым';
         }
         if (empty($userData['email'])) {
             $valid = false;
-            $errors[] = 'Email cannot be blank';
+            $errors[] = 'Email не может быть пустым';
         } elseif (!filter_var($userData['email'], FILTER_VALIDATE_EMAIL)) {
             $valid = false;
-            $errors[] = 'Invalid email address';
+            $errors[] = 'Проверьте адрес электронной почты';
         } else {
             if ($this->isUserExists($userData['email'])) {
                 $valid = false;
-                $errors[] = 'That email address is already registered';
+                $errors[] = 'Адрес электронной почты уже используется';
             }
         }
         if (empty($userData['password'])) {
             $valid = false;
-            $errors[] = 'Password cannot be blank';
+            $errors[] = 'Пароль может быть пустым';
         }
         if (empty($_POST['password_verify'])) {
             $valid = false;
-            $errors[] = '"Retype Password" cannot be blank';
+            $errors[] = '«Повторите пароль» может быть пустым';
         }
 
         if ($_POST['password_verify'] != $userData['password']) {
             $valid = false;
-            $errors[] = 'Password and "Retype Password" are not identical';
+            $errors[] = 'Пароль и «Повторите пароль» не идентичны';
         }
         return [
             'valid' => $valid,
             'errors' => $errors
         ];
+    }
+
+    private function sendActivationKey($user) {
+//        $mail_to = $user->email;
+        $actionPath = 'site/activation';
+        $subject = "Добро пожаловать на наш сайт!\r\n";
+        $message = "\r\nСпасибо, что за ваш интерес!\r\nДля активации вашей учетной записи пройдите по ссылке в пиьме.\r\n";
+        $message .= "\r\nКод активации: ";
+        $message .= Yii::$app
+            ->urlManager
+            ->createAbsoluteUrl([
+                $actionPath,
+                'activation_key' => $user->activation_key
+            ]);
+
+        Yii::$app->mailer->compose()
+            ->setTo($user->email)
+            ->setFrom([Yii::$app->params['senderEmail'] => Yii::$app->params['senderName']])
+            ->setReplyTo([$this->email => $this->name])
+            ->setSubject($subject)
+            ->setTextBody($message)
+            ->send();
     }
 }

@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use app\models\User;
 use Yii;
 use yii\filters\AccessControl;
 use yii\web\Controller;
@@ -95,13 +96,27 @@ class SiteController extends Controller
 
         $model = new RegisterForm();
         if ($model->load(Yii::$app->request->post()) && $model->register()) {
-            return $this->goBack();
+            \yii\web\Controller::redirect('/site/about');
         }
+
 
         $model->password = '';
         return $this->render('register', [
             'model' => $model,
         ]);
+    }
+
+    public function actionActivation() {
+        if ($activation_key = Yii::$app->request->get('activation_key')) {
+            $user = User::findIdentityByActivationKey($activation_key);
+            $user->is_active = true;
+            $user->save();
+            Yii::$app->user->login($user,  0);
+//            $user->save();
+//            Yii::$app->session->setFlash('contactFormSubmitted');
+            return $this->goHome();
+//            return $this->refresh();
+        }
     }
 
     /**
