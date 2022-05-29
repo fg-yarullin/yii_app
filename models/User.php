@@ -1,7 +1,6 @@
 <?php
 
 namespace app\models;
-use yii\db\conditions\LikeCondition;
 use yii\web\IdentityInterface;
 use yii\db\ActiveRecord;
 use Yii;

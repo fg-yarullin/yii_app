@@ -11,6 +11,7 @@ use yii\filters\VerbFilter;
 use app\models\LoginForm;
 use app\models\RegisterForm;
 use app\models\ContactForm;
+use app\models\ProfileForm;
 
 class SiteController extends Controller
 {
@@ -63,7 +64,24 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
-        return $this->render('index');
+        if (!Yii::$app->user->isGuest) {
+            return $this->goHome();
+        }
+
+        $model = new RegisterForm();
+
+        if ($model->load(Yii::$app->request->post()) && $model->register()) {
+//            \yii\web\Controller::redirect('/site/profile');
+//           return $this->render('confirmationsent');
+            $model->is_registered= true;
+            $message = 'Регистрация прошла успешно. На вашу электронную почту отравлено письмо со ссылкой для активации учетной записи.';
+//            Yii::$app->session->setFlash('success', "Your message to display.");
+            return $this->goBack(['model' => $model,], Yii::$app->session->setFlash('success', $message));
+        }
+
+        return $this->render('register', [
+            'model' => $model,
+        ]);
     }
 
     /**
@@ -74,12 +92,12 @@ class SiteController extends Controller
     public function actionLogin()
     {
         if (!Yii::$app->user->isGuest) {
-            return $this->goHome();
+            return $this->actionRegister();
         }
 
         $model = new LoginForm();
         if ($model->load(Yii::$app->request->post()) && $model->login()) {
-            return $this->goBack();
+            \yii\web\Controller::redirect('/site/profile');
         }
 
         $model->password = '';
@@ -88,22 +106,8 @@ class SiteController extends Controller
         ]);
     }
 
-    public function actionRegister()
-    {
-        if (!Yii::$app->user->isGuest) {
-            return $this->goHome();
-        }
-
-        $model = new RegisterForm();
-        if ($model->load(Yii::$app->request->post()) && $model->register()) {
-            \yii\web\Controller::redirect('/site/about');
-        }
-
-
-        $model->password = '';
-        return $this->render('register', [
-            'model' => $model,
-        ]);
+    public function actionConfirmationSent() {
+        return $this->render('confirmationsent');
     }
 
     public function actionActivation() {
@@ -111,11 +115,8 @@ class SiteController extends Controller
             $user = User::findIdentityByActivationKey($activation_key);
             $user->is_active = true;
             $user->save();
-            Yii::$app->user->login($user,  0);
-//            $user->save();
-//            Yii::$app->session->setFlash('contactFormSubmitted');
+            Yii::$app->user->login($user,  360);
             return $this->goHome();
-//            return $this->refresh();
         }
     }
 
@@ -154,13 +155,42 @@ class SiteController extends Controller
      *
      * @return string
      */
-    public function actionAbout()
+    public function actionProfile()
     {
-        return $this->render('about');
+        $model = new ProfileForm();
+        if ($user = User::findIdentity(Yii::$app->user->id)) {
+            $model->showProfile($user->attributes);
+            $keys = ['surname', 'name', 'password', 'confirm_password'];
+
+            if ($model->load(Yii::$app->request->post())) {
+
+                foreach ($model as $key => $value) {
+                    if (in_array($key, $keys) && !!$value) {
+                        if ($key === 'password') {
+                            $user->$key = Yii::$app->security->generatePasswordHash($value);
+                        } else {
+                            $user->$key = $value;
+                        }
+                    }
+                }
+                $user->update();
+
+                return $this->refresh();
+            }
+
+            return $this->render('profile', [
+                'model' => $model,
+            ]);
+        }
     }
 
-    public function actionSay($message = 'Hello')
+    public function actionDeleteprofile()
     {
-        return $this->render('say', ['message' => $message]);
+        $user = User::findIdentity(Yii::$app->user->id);
+        if (Yii::$app->request->post()) {
+            $user->delete();
+            return $this->goHome();
+        }
+        return $this->render('deleteprofile', ['user' => $user]);
     }
 }

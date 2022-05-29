@@ -2,24 +2,39 @@
 
 /** @var yii\web\View $this */
 /** @var yii\bootstrap4\ActiveForm $form */
+/** @var app\models\ProfileForm $model */
 
 use yii\bootstrap4\ActiveForm;
-use yii\bootstrap4\Html;
+use yii\helpers\Html;
 
-
-$this->title = 'Регистрация';
+Html::csrfMetaTags();
+$this->title = 'Профиль пользователя';
 $this->params['breadcrumbs'][] = $this->title;
+
+use app\assets\AppAsset;
+AppAsset::register($this);
+$this->registerJsFile('@web/js/profile.js', ['position' => Yii::$app->view::POS_END]);
+
+/* or
+$this->registerJsFile(
+    '@web/js/profile.js',
+    [['position' => Yii::$app->view::POS_END]]
+);*/
 ?>
+<div class="site-about">
+    <div id="app" class="d-flex justify-content-center"></div>
+    <div class="text-center">
+        <h1><?= Html::encode($this->title) ?></h1>
+        <label class="form-label" for="email-address">Адрес email:</label>
+        <?= Html::encode($model->email) ?>
+        <input type="hidden" id="user-id" name="id" value="<?=Html::encode($model->id)?>">
+    </div>
 
-<div class="site-register">
-    <h1 class="text-center"><?= Html::encode($this->title) ?></h1>
-
-    <p class="text-center">Для регистрации, пожалуйста, заполните следующие поля:</p>
     <div class="d-flex justify-content-center align-items-center mt-4">
-        <? if (!$this->is_registered) :?>
         <div class="col-md-4 col-md-offset-4">
+
             <?php $form = ActiveForm::begin([
-                'id' => 'register-form',
+                'id' => 'profile-form',
                 'layout' => 'horizontal',
                 'fieldConfig' => [
                     'template' => "{label}\n{input}\n{error}",
@@ -37,10 +52,6 @@ $this->params['breadcrumbs'][] = $this->title;
                 ->textInput(['autofocus' => true])
                 ->label('Имя')?>
 
-            <?= $form->field($model, 'email')
-                ->input('email', ['autofocus' => true])
-                ->label('Email адрес')?>
-
             <?= $form->field($model, 'password')
                 ->passwordInput()
                 ->label('Пароль')?>
@@ -49,15 +60,24 @@ $this->params['breadcrumbs'][] = $this->title;
                 ->passwordInput()
                 ->label('Повторите пароль ')?>
 
-            <div class="form-group">
-                <div class="text-center">
-                    <?= Html::submitButton('Зарегистрировать', ['class' => 'btn btn-primary', 'name' => 'login-button']) ?>
+            <div class="form-group d-flex justify-content-end">
+                <div class="w-50">
+                    <?= Html::submitButton(
+                        'Сохранить',
+                        [
+                            'class' => 'btn btn-primary w-75',
+                            'name' => 'profile-save-button'
+                        ])
+                    ?>
+                </div>
+                <div class="w-50">
+                    <a class="btn btn-danger w-75" id="delete-button" href="deleteprofile">Удалить</a>
                 </div>
             </div>
 
             <?php ActiveForm::end(); ?>
 
         </div>
-        <? endif ?>
     </div>
+
 </div>

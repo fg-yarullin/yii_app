@@ -4,8 +4,6 @@ namespace app\models;
 
 use Yii;
 use yii\base\Model;
-use yii\helpers\Url;
-use app\controllers\SiteController;
 
 class RegisterForm extends Model
 {
@@ -15,6 +13,8 @@ class RegisterForm extends Model
     public $email;
     public $password;
     public $password_confirm;
+
+    public $is_registered = false;
 //    private $activation_key;
 
     /**

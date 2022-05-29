@@ -39,7 +39,7 @@ $config = [
                 'port' => '2525',
                 'encryption' => 'TLS'
             ],
-            'useFileTransport' => false,
+            'useFileTransport' => true,
         ],
         'log' => [
             'traceLevel' => YII_DEBUG ? 3 : 0,
@@ -55,8 +55,9 @@ $config = [
         'urlManager' => [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
-            'rules' => [
-            ],
+//            'rules' => [
+//                '' => '/site/register',
+//            ],
         ],
 
     ],
