@@ -91,10 +91,6 @@ class SiteController extends Controller
      */
     public function actionLogin()
     {
-        if (!Yii::$app->user->isGuest) {
-            return $this->actionRegister();
-        }
-
         $model = new LoginForm();
         if ($model->load(Yii::$app->request->post()) && $model->login()) {
             \yii\web\Controller::redirect('/site/profile');
@@ -106,9 +102,9 @@ class SiteController extends Controller
         ]);
     }
 
-    public function actionConfirmationSent() {
-        return $this->render('confirmationsent');
-    }
+//    public function actionConfirmationSent() {
+//        return $this->render('confirmationsent');
+//    }
 
     public function actionActivation() {
         if ($activation_key = Yii::$app->request->get('activation_key')) {

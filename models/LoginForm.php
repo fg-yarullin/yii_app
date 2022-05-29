@@ -46,10 +46,10 @@ class LoginForm extends Model
     {
         if (!$this->hasErrors()) {
             $user = $this->getUser();
-//            echo '<pre>'; print_r($user->is_active); die;
             if ($user && $user->is_active && $user->validatePassword($this->password)) {
                 return true;
-            } elseif (!$user->is_active) {
+            } elseif ($user && !$user->is_active) {
+                Yii::$app->session->setFlash('warning', 'Учетная запись не активирована');
                 $this->addError($attribute, 'Учетная запись не активирована.');
             }
             else {

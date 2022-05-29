@@ -36,12 +36,17 @@ class User extends ActiveRecord implements IdentityInterface
     /**
      * Finds user by username
      *
-     * @param string $email
+     * @param string $username
      * @return static|null
      */
-    public static function findByUsername(string $email): User
+    public static function findByUsername(string $username)
     {
-        return static::findOne(['email' => $email]);
+//        try {
+//            return static::findOne(['username' => $username]);
+//        } catch (\Exception $e) {
+//            return false;
+//        }
+        return static::findOne(['username' => $username]);
     }
 
     /**
@@ -49,7 +54,12 @@ class User extends ActiveRecord implements IdentityInterface
      */
     public function getId()
     {
-        return $this->id;
+        try {
+            return $this->id;
+        } catch (\Exception $e) {
+            return false;
+        }
+
     }
 
     /**

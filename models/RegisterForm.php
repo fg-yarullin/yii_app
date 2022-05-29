@@ -24,7 +24,6 @@ class RegisterForm extends Model
     {
         $message = 'Адрес электронной почты уже зарегистрирован';
         return [
-            // username and password are both required
             [
                 [
                     'surname', 'name', 'password',
@@ -33,7 +32,7 @@ class RegisterForm extends Model
                 'required'
             ],
             // password is validated by validatePassword()
-            ['password', 'validatePassword'],
+            ['password_confirm', 'validatePassword'],
             ['email', 'unique', 'message' => $message]
         ];
     }
@@ -45,15 +44,14 @@ class RegisterForm extends Model
      * @param string $attribute the attribute currently being validated
      * @param array $params the additional name-value pairs given in the rule
      */
-    public function validatePassword($attribute, $params)
+    private function validatePassword()
     {
         if (!$this->hasErrors()) {
-            // create user
-//            $user = $this->getUser();
-
-//            if (!$user || !$user->validatePassword($this->password)) {
-//                $this->addError($attribute, 'Incorrect username or password.');
-//            }
+            if (strcmp($this->password_confirm, $this->password) !== 0) {
+                $this->addError('password', 'Пароли не совпадают.');
+                return false;
+            }
+            return true;
         }
     }
 
@@ -74,10 +72,11 @@ class RegisterForm extends Model
             $user->auth_key = '';
             $user->activation_key = sha1(mt_rand(10000, 99999).time().$this->email);
 
-//            $this->sendActivationKey($user);
-//            echo '<pre>'; print_r('hello')); die;
+            if (User::findByUsername($this->email)) {
+                $this->addError('email', 'Адрес электронной почты уже зарегистрирован');
+            }
 
-            if($user->save()){
+            if($this->validatePassword($this->password) && $user->save()){
                 $this->sendActivationKey($user);
                 return true;
             }
@@ -85,54 +84,8 @@ class RegisterForm extends Model
         return false;
     }
 
-    private function validateUserData($userData) {
-        $valid = true;
-        $errors = [];
-        if (empty($userData['username'])) {
-            $valid = false;
-            $errors[] = 'Логи не может быть пустым';
-        }
-        if (empty($userData['surname'])) {
-            $valid = false;
-            $errors[] = 'Фамилия не может быть пустым';
-        }
-        if (empty($userData['name'])) {
-            $valid = false;
-            $errors[] = 'Name не может быть пустым';
-        }
-        if (empty($userData['email'])) {
-            $valid = false;
-            $errors[] = 'Email не может быть пустым';
-        } elseif (!filter_var($userData['email'], FILTER_VALIDATE_EMAIL)) {
-            $valid = false;
-            $errors[] = 'Проверьте адрес электронной почты';
-        } else {
-            if ($this->isUserExists($userData['email'])) {
-                $valid = false;
-                $errors[] = 'Адрес электронной почты уже используется';
-            }
-        }
-        if (empty($userData['password'])) {
-            $valid = false;
-            $errors[] = 'Пароль может быть пустым';
-        }
-        if (empty($_POST['password_verify'])) {
-            $valid = false;
-            $errors[] = '«Повторите пароль» может быть пустым';
-        }
-
-        if ($_POST['password_verify'] != $userData['password']) {
-            $valid = false;
-            $errors[] = 'Пароль и «Повторите пароль» не идентичны';
-        }
-        return [
-            'valid' => $valid,
-            'errors' => $errors
-        ];
-    }
 
     private function sendActivationKey($user) {
-//        $mail_to = $user->email;
         $actionPath = 'site/activation';
         $subject = "Добро пожаловать на наш сайт!\r\n";
         $message = "\r\nСпасибо, что за ваш интерес!\r\nДля активации вашей учетной записи пройдите по ссылке в пиьме.\r\n";
