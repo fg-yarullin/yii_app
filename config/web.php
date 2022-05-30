@@ -35,7 +35,7 @@ $config = [
                 'class' => 'Swift_SmtpTransport',
                 'host' => 'smtp.mailsnag.com',
                 'username' => 'lqN2tfJtUvGU',
-                'password' => 'CYGb3TeplvqS',
+                'password' => '',
                 'port' => '2525',
                 'encryption' => 'TLS'
             ],
